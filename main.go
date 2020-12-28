@@ -6,13 +6,19 @@ import (
 	"flag"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
 var logger = logrus.New()
+
+func init() {
+	logger.Out = os.Stdout
+}
 
 func main() {
 	var input CmdInput
@@ -21,32 +27,40 @@ func main() {
 	flagSet.BoolVar(&input.Enable, "e", false, "炉石传说网络恢复")
 	flagSet.BoolVar(&input.Disable, "d", false, "炉石传说网络中断")
 	flagSet.BoolVar(&input.Debug, "debug", false, "调试模式")
+	flagSet.BoolVar(&input.Backup, "b", false, "备份配置文件")
 	flagSet.UintVar(&input.IntervalSeconds, "s", 0, "自动重连间隔(单位秒)")
 	flagSet.Usage = usage
 
 	flagSet.Parse(os.Args[1:])
-
-	if (input.Enable && input.Disable) || (!input.Enable && !input.Disable) {
-		flagSet.Usage()
-		return
-	}
-
-	logger.Out = os.Stdout
-
-	handler := NewCmdHandler().
-		Register(CmdHandlerTypeDisable, disableHandler).
-		Register(CmdHandlerTypeEnable, enableHandler)
-
-	if input.Debug {
-		logger.SetLevel(logrus.DebugLevel)
-		handler.RegisterPreRunHandler(debugHandler).RegisterPostRunHandler(debugHandler)
-	}
 
 	var t CmdHandlerType
 	if input.Enable {
 		t = CmdHandlerTypeEnable
 	} else if input.Disable {
 		t = CmdHandlerTypeDisable
+	} else if input.Backup {
+		t = CmdHandlerTypeBackup
+	}
+
+	if t == 0 {
+		flagSet.Usage()
+		return
+	}
+
+	input.PFConfPath = "/etc/pf.conf"
+	input.BlockPorts = []uint16{
+		1119,
+		3724,
+	}
+
+	handler := NewCmdHandler().
+		Register(CmdHandlerTypeDisable, disableHandler).
+		Register(CmdHandlerTypeEnable, enableHandler).
+		Register(CmdHandlerTypeBackup, backupHandler)
+
+	if input.Debug {
+		logger.SetLevel(logrus.DebugLevel)
+		handler.RegisterPreRunHandler(debugHandler).RegisterPostRunHandler(debugHandler)
 	}
 
 	err := handler.Handle(t, input)
@@ -56,8 +70,31 @@ func main() {
 	}
 }
 
+func backupHandler(c CmdInput) error {
+	if c.PFConfPath == "" {
+		return errors.New("file not found")
+	}
+
+	fb, err := ioutil.ReadFile(c.PFConfPath)
+	if err != nil {
+		return err
+	}
+
+	//直接覆盖执行目录下的备份文件
+	backupName := fmt.Sprintf("%s_%s", c.PFConfPath, time.Now().Format("2006010215"))
+	_, fileName := filepath.Split(backupName)
+
+	err = ioutil.WriteFile(fmt.Sprintf("./%s", fileName), fb, 0644)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("配置文件备份成功：%s\n", fileName)
+	return nil
+}
+
 func debugHandler(c CmdInput) error {
-	b, err := DefaultHearthstonePF().PFRules()
+	b, err := NewHearthstonePF(c.PFConfPath, c.BlockPorts).PFRules()
 	if err != nil {
 		fmt.Printf("err: %s\n", err.Error())
 		return err
@@ -68,7 +105,7 @@ func debugHandler(c CmdInput) error {
 }
 
 func disableHandler(c CmdInput) error {
-	err := DefaultHearthstonePF().Disable()
+	err := NewHearthstonePF(c.PFConfPath, c.BlockPorts).Disable()
 	if err != nil && err != ErrDupRun {
 		fmt.Printf("err: %s\n", err.Error())
 		return err
@@ -82,7 +119,7 @@ func enableHandler(c CmdInput) error {
 		return errors.New("炉石客户端未启动")
 	}
 
-	pf := DefaultHearthstonePF()
+	pf := NewHearthstonePF(c.PFConfPath, c.BlockPorts)
 
 	err := pf.Enable()
 	if err != nil && err != ErrDupRun {
@@ -114,8 +151,10 @@ func usage() {
 		"-d 	炉石传说断网",
 		"-e 	炉石传说网络恢复",
 		"-s 	自动重连间隔(单位秒)",
+		"-b 	备份配置文件",
 		"-debug  调试模式\n",
 		"使用示例(以文件放在下载目录为例):",
+		"备份pf默认配置文件(会在程序目录下生成pf.conf_2020xxx的备份文件): sudo ~/Downloads/hearthstone-pf -b",
 		"自动档(断网7秒后恢复网络): sudo ~/Downloads/hearthstone-pf -e -s 7",
 		"手动档(断网): 		   sudo ~/Downloads/hearthstone-pf -e",
 		"手动档(网络恢复): 	   sudo ~/Downloads/hearthstone-pf -d",
@@ -143,6 +182,7 @@ type CmdHandlerType int
 const (
 	CmdHandlerTypeEnable CmdHandlerType = iota + 1
 	CmdHandlerTypeDisable
+	CmdHandlerTypeBackup
 )
 
 type CmdHandlerFn func(c CmdInput) error
@@ -151,7 +191,10 @@ type CmdInput struct {
 	Disable         bool
 	Enable          bool
 	Debug           bool
+	Backup          bool
 	IntervalSeconds uint
+	PFConfPath      string
+	BlockPorts      []uint16
 }
 
 type CmdHandler struct {

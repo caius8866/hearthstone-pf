@@ -31,15 +31,6 @@ func NewHearthstonePF(confPath string, ports []uint16) *HearthstonePF {
 	}
 }
 
-func DefaultHearthstonePF() *HearthstonePF {
-	pfConfPath := "/etc/pf.conf"
-	blockPorts := []uint16{
-		1119,
-		3724,
-	}
-	return NewHearthstonePF(pfConfPath, blockPorts)
-}
-
 func (h *HearthstonePF) Enable() error {
 	exist, err := h.blockSymbolInConf()
 	if err != nil {
