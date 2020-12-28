@@ -2,8 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e0b39968-8cf4-4a36-9e4d-40329c2ba456" name="默认的" comment="">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/pf.conf" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -176,11 +176,11 @@
       <screen x="54" y="25" width="1866" height="1055" />
     </state>
     <state width="1824" height="351" key="GridCell.Tab.1.right/54.25.1866.1055@54.25.1866.1055" timestamp="1609094058270" />
-    <state x="715" y="288" width="542" height="524" key="StructurePopup" timestamp="1609131565108">
-      <screen x="51" y="25" width="1869" height="1055" />
+    <state x="716" y="288" width="541" height="524" key="StructurePopup" timestamp="1609133126143">
+      <screen x="52" y="25" width="1868" height="1055" />
     </state>
     <state x="715" y="288" width="542" height="524" key="StructurePopup/51.25.1869.1055@51.25.1869.1055" timestamp="1609131565108" />
-    <state x="716" y="288" width="541" height="524" key="StructurePopup/52.25.1868.1055@52.25.1868.1055" timestamp="1609093470334" />
+    <state x="716" y="288" width="541" height="524" key="StructurePopup/52.25.1868.1055@52.25.1868.1055" timestamp="1609133126143" />
     <state x="717" y="288" width="540" height="524" key="StructurePopup/54.25.1866.1055@54.25.1866.1055" timestamp="1609084811778" />
     <state width="700" height="500" key="XDebugger.FullValuePopup" timestamp="1609070424543">
       <screen x="54" y="25" width="1866" height="1055" />

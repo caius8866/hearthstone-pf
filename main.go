@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+const version = "0.1"
 var logger = logrus.New()
 
 func init() {
@@ -147,6 +148,7 @@ func enableHandler(c CmdInput) error {
 
 func usage() {
 	usage := []string{
+		fmt.Sprintf("hearthstone-pf %s\n", version),
 		"参数说明:",
 		"-d 	炉石传说断网",
 		"-e 	炉石传说网络恢复",
